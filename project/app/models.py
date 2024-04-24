@@ -31,6 +31,8 @@ class Donor(models.Model):
     gender = models.CharField(max_length=10)
     image = models.ImageField(upload_to="")
     ready_to_donate = models.BooleanField(default=True)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6, null=True, blank=True)
 
     def __str__(self):
         return str(self.blood_group)

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Get User Location and Mark on Map</title>
+<!-- Include Leaflet CSS and JavaScript -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<style>
+    #map {
+        height: 400px;
+    }
+</style>
+</head>
+<body>
+
+<!-- Create a div to hold the map -->
+<div id="map"></div>
+<div id="request_location" >User GPS Location </div>
+
+
+<script>
+    const btn = document.getElementById('request_location')
+var latitude = "";
+var longitude = "";
+var granted = false;
+window.addEventListener("load", () => {
+    // Check if geolocation is supported
+    if ("geolocation" in navigator) {
+        // Initialize Leaflet map
+        const map = L.map("map").setView([0, 0], 13);
+
+        // Add the base OpenStreetMap layer
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Get user's current position and mark it on the map
+        navigator.geolocation.getCurrentPosition((position) => {
+            const { latitude, longitude } = position.coords;
+            latitude = position.coords.latitude;
+            longitude = position.coords.longitude;
+            // Create a marker with the user's coordinates
+            const marker = L.marker([latitude, longitude]).addTo(map);
+
+            // Set the map view to the user's location
+            map.setView([latitude, longitude], 13);
+            granted = true;
+            btn.innerHTML = `${latitude} - ${longitude}`;
+
+        }, (error) => {
+            granted = false;
+            console.error("Error getting location:", error);
+        });
+    } else {
+        granted = false;
+        console.error("Geolocation is not supported by this browser.");
+    }
+});
+</script>
+
+</body>
+</html>

@@ -1,0 +1,132 @@
+{% extends 'base.html' %}
+
+
+{% block body %}
+
+
+<div class=" container-fuid row p-5 ">
+
+<div class="col-lg-12">
+
+<h1>Nearest Donors </h1>
+<p>Your Coordinates <strong><span id="coordinates" class="font-bold">N/A</span></strong></p>
+</div>
+
+<div class="col-lg-12">
+    <div class="row" id="donor_list">
+
+        ee
+    </div>
+</div>
+<div class="col-lg-12" id="map1">
+
+
+</div>
+
+
+</div>
+
+<style>
+
+    #map1{
+        height: 500px;
+        width: 600px;
+    }
+</style>
+<script>
+
+var latitude_ ;
+var longitude_ ;
+var x = document.getElementById("coordinates");
+
+const map = L.map("map1").setView([0, 0], 13);
+
+// Add the base OpenStreetMap layer
+L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+}).addTo(map);
+async function fetch_donor (latitude_,longitude_){
+    fetch( `/nearest_donors/?latitude=${latitude_}&longitude=${longitude_}`).then(res=>res.json()).then(json_data=>{
+        
+            console.log(json_data)
+            // const marker = L.marker([latitude_, longitude_]).addTo(map);
+            json_data.nearest_donors.forEach(donor => {
+                const marker = L.marker([donor.latitude, donor.longitude]).addTo(map).bindPopup(`${donor.name} <br> ${donor.distance} m away <br> BG : ${donor.blood_group}`)
+    .openPopup();;
+
+    var final_data = ''
+    var donor_data = json_data.nearest_donors.forEach(donor=>{
+    //    const  data = `<div class="col-lg-4">
+    //     <h3>${donor.name}</h3>
+    //     <p>${donor.blood_group}</p>
+    //     <p>${donor.distance}</p>
+    // </div>`
+
+    const data = `
+    <div class="col-md-2">
+      <div class="card">
+        <div class="card-body">
+          <h5 class="card-title">${donor.name}</h5>
+          
+          <h6 class="card-subtitle mb-2 text-muted">Blood Group</h6>
+          <p class="card-text">
+            <i class="fas fa-tint"></i> ${donor.blood_group}
+          </p>
+          <h6 class="card-subtitle mb-2 text-muted">Distance</h6>
+          <p class="card-text">
+            <i class="fas fa-map-marker-alt"></i> ${donor.distance} m
+          </p>
+        </div>
+      </div>
+    </div>`
+
+
+    final_data += data;
+    })
+    document.getElementById('donor_list').innerHTML = final_data
+                
+            });
+    }).catch(error=>{
+        console.log(error)
+    })
+}
+window.addEventListener("load", () => {
+
+
+// Check if geolocation is supported
+if ("geolocation" in navigator) {
+    // Initialize Leaflet map
+   
+
+    // Get user's current position and mark it on the map
+    navigator.geolocation.getCurrentPosition( (position) => {
+        const { latitude, longitude } = position.coords;
+        latitude_ = position.coords.latitude;
+        longitude_ = position.coords.longitude;
+        // update_location()
+        x.innerHTML = `${latitude} - ${longitude}`;
+        console.log(latitude_,longitude_)
+
+        fetch_donor(latitude_,longitude_)
+     
+
+
+            // Set the map view to the user's location
+            map.setView([latitude_, longitude_], 15);
+       console.log("MAP SET")
+        // Create a marker with the user's coordinates
+        
+        granted = true;
+        // btn.innerHTML = `${latitude} - ${longitude}`;
+
+    }, (error) => {
+        granted = false;
+        console.error("Error getting location:", error);
+    });
+} else {
+    granted = false;
+    console.error("Geolocation is not supported by this browser.");
+}
+});
+</script>
+{% endblock body %}

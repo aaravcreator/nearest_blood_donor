@@ -4,11 +4,14 @@
 {% endblock %}
 {% block body %}
 
+<a href="{% url 'list_nearest_donors' %}" class="text-white btn btn-primary">Nearest Donors</a>
 <h2 class="text-center">All Blood Requests</h2>
   <div class="album py-5 bg-light">
     <br>
     <div class="container">
       <div class="row">
+
+
         {% for i in all_group %}
         <div class="col-md-4">
           <div class="card mb-4 shadow-sm border-danger">

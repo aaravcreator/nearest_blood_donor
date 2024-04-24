@@ -15,4 +15,9 @@ urlpatterns = [
     path('change_status/', views.change_status, name='change_status'),
     path('why/', views.why, name='why'),
     path('about_us/', views.about_us, name='about'),
+    path('nearest_donors/',views.nearest_donors,name="nearest_donors"),
+    path('current_location/',views.current_location,name="current_location"),
+    path('set_location/',views.set_location,name="set_location"),
+    path('list_nearest_donors/',views.list_nearest_donors,name="list_nearest_donors"),
+
 ]

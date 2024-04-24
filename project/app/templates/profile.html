@@ -1,21 +1,138 @@
 {% extends 'base.html' %}
 
+
+
+
 {% block body %}
+
+
+
+<style>
+    #map1{
+        height: 200px;
+    }
+</style>
+
+<script>
+    const btn = document.getElementById('request_location')
+var latitude_ = "{{donor_profile.latitude}}";
+var longitude_ = "{{donor_profile.longitude}}";
+var granted = false;
+
+
+function update_location(){
+    document.getElementById('latitude').value = latitude_;
+    document.getElementById('longitude').value = longitude_;
+}
+window.addEventListener("load", () => {
+
+    if(latitude_ !== "None"){
+        console.log(latitude_)
+        console.log(latitude_.length)
+        const map = L.map("map1").setView([0, 0], 13);
+
+        // Add the base OpenStreetMap layer
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        const marker = L.marker([latitude_, longitude_]).addTo(map);
+
+                // Set the map view to the user's location
+                map.setView([latitude_, longitude_], 15);
+        return;
+
+    }
+    // Check if geolocation is supported
+    if ("geolocation" in navigator) {
+        // Initialize Leaflet map
+        const map = L.map("map1").setView([0, 0], 13);
+
+        // Add the base OpenStreetMap layer
+        L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        // Get user's current position and mark it on the map
+        navigator.geolocation.getCurrentPosition((position) => {
+            const { latitude, longitude } = position.coords;
+            latitude_ = position.coords.latitude;
+            longitude_ = position.coords.longitude;
+            update_location()
+    
+                const marker = L.marker([latitude_, longitude_]).addTo(map);
+
+                // Set the map view to the user's location
+                map.setView([latitude_, longitude_], 15);
+           console.log("MAP SET")
+            // Create a marker with the user's coordinates
+            
+            granted = true;
+            // btn.innerHTML = `${latitude} - ${longitude}`;
+
+        }, (error) => {
+            granted = false;
+            console.error("Error getting location:", error);
+        });
+    } else {
+        granted = false;
+        console.error("Geolocation is not supported by this browser.");
+    }
+});
+</script>
+
 <div class="container mt-5">
     <div class="row justify-content-center">
-        <div class="col-md-8">
+        <div class="col-md-12">
             <div class="row">
-                <div class="col-md-4">
-                    <div style="width: 200px; height: 200px; overflow: hidden; border-radius: 10px;">
-                        <img src="{{donor_profile.image.url}}" alt="Profile Image" style="width: 100%; height: 100%; object-fit: cover;">
-                    </div>
-                    {% if donor_profile.ready_to_donate %}
-                    <a href="/change_status/" class="btn btn-success btn-block mt-3">I'm Ready To Donate</a>
-                    {% else %}
-                    <a href="/change_status/" class="btn btn-danger btn-block mt-3">I'm Not Ready To Donate</a>
-                    {% endif %}
+                <div class="col-md-6">
+                   
+                        <div style="width: 200px; height: 200px; overflow: hidden; border-radius: 10px;">
+                            <img src="{{donor_profile.image.url}}" alt="Profile Image" style="width: 100%; height: 100%; object-fit: cover;">
+                        </div>
+                        {% if donor_profile.ready_to_donate %}
+                        <a href="/change_status/" class="btn btn-success btn-block mt-3">I'm Ready To Donate</a>
+                        {% else %}
+                        <a href="/change_status/" class="btn btn-danger btn-block mt-3">I'm Not Ready To Donate</a>
+                        {% endif %}
+                    
+                        <br>
+                        <h3>Location:</h3>
+                        {% if donor_profile.latitude and donor_profile.longitude %}
+    
+                        <p class="text-white">{{donor_profile.latitude}}, {{donor_profile.longitude}}</p>
+    
+                        <div id="map1">
+    
+                        </div>
+    
+                        <form action="/set_location/" method="post" style="display: none;">
+                            {% csrf_token %}
+                            <label for="latitude">Latitude</label>
+                            <input type="float" name="latitude" id="latitude" required >
+                            <label for="longitude">Longitude</label>
+                            <input type="float" name="longitude" id="longitude" required>
+                            <button type="submit" class="btn btn-primary">Set Location</button>
+                        </form>
+                        {% else %}
+                        
+                        <div id="map1">
+    
+                        </div>
+                        <form action="/set_location/" method="post">
+                            {% csrf_token %}
+                            <label for="latitude">Latitude</label>
+                            <input type="float" name="latitude" id="latitude" required >
+                            <label for="longitude">Longitude</label>
+                            <input type="float" name="longitude" id="longitude" required>
+                            <button type="submit" class="btn btn-primary">Set Location</button>
+                        </form>
+    
+                        {% endif %}
+    
+                
                 </div>
-                <div class="col-md-8">
+                <div class="col-md-6">
                     <h3>Username:</h3>
                     <p>{{user}}</p>
                     <h3>Full Name:</h3>
@@ -36,6 +153,10 @@
                     <p>{{donor_profile.address}}</p>
                     <h3>Blood Group:</h3>
                     <p>{{donor_profile.blood_group}}</p>
+                    <h3>Latitude:</h3>
+                    <p >{{donor_profile.latitude}}</p>
+                    <h3>Longitude:</h3>
+                    <p>{{donor_profile.longitude}}</p>
                     <br>
                     <a href="/edit_profile/" class="btn btn-outline-danger btn-block mt-4">Edit Profile</a>
                     <br>

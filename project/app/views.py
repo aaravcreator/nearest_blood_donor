@@ -148,3 +148,78 @@ def why(request):
     return render(request,"why.html")
 def about_us(request):
     return render(request,"aboutus.html")
+
+
+# from django.contrib.gis.geos import Point
+# from django.contrib.gis.db.models.functions import Distance
+from django.http import JsonResponse
+from .utils import calcdistance
+
+
+def list_nearest_donors(request):
+    return render(request,'list_nearest_donors.html')
+def nearest_donors(request):
+    if request.method == 'GET':
+        # Assuming the user's latitude and longitude are passed as GET parameters
+        user_latitude = request.GET.get('latitude')
+        user_longitude = request.GET.get('longitude')
+        # user_latitude= 27.7958429
+        # user_longitude = 87.295600
+
+        if user_latitude and user_longitude:
+            # user_location = Point(float(user_longitude), float(user_latitude), srid=4326)  # Assuming WGS84 coordinate system
+
+            # Query to find nearest donors
+            # nearest_donors = Donor.objects.annotate(
+            #     distance=Distance('location', user_location)
+            # ).order_by('distance')[:10]  # Get the 10 nearest donors
+            donors = Donor.objects.filter(ready_to_donate=True)
+            nearest_donors_list = []
+            for donor in donors: 
+                if donor.latitude and donor.longitude:
+                    distance = round(calcdistance(user_latitude,user_longitude,donor.latitude,donor.longitude),2)
+                else:
+                    donor.latitude = 27.7958429
+                    donor.longitude = 87.295000
+                    distance = round(calcdistance(user_latitude,user_longitude,donor.latitude,donor.longitude),2)
+                    print(distance)
+                donor_data = {}
+                donor_data['name'] = donor.donor.get_full_name()
+                donor_data['blood_group'] =donor.blood_group.name
+                donor_data['distance'] = distance
+                donor_data['latitude'] = donor.latitude
+                donor_data['longitude'] = donor.longitude
+                nearest_donors_list.append(donor_data)
+
+            sorted_donor_list = sorted(nearest_donors_list, key=lambda x: float(x['distance']))[:10]
+
+            # Serialize the queryset to JSON
+            # donors_data = [
+            #     {
+            #         'id': donor.id,
+            #         'username': donor.donor.username if donor.donor else "Anonymous",
+            #         'distance': donor.distance.km
+            #     }
+            #     for donor in nearest_donors
+            # ]
+            return JsonResponse({'nearest_donors': sorted_donor_list})
+            # return JsonResponse({'nearest_donors': nearest_donors_list})
+        else:
+            return JsonResponse({'error': 'Latitude and longitude parameters are required.'}, status=400)
+    else:
+        return JsonResponse({'error': 'Only GET method is allowed.'}, status=405)
+    
+def set_location(request):
+    
+    if request.method == 'POST':
+        donor = request.user.donor
+        latitude = request.POST.get('latitude')
+        longitude = request.POST.get('longitude')
+        donor.latitude = latitude
+        donor.longitude = longitude
+        donor.save()
+        return redirect('profile')
+        
+
+def current_location(request):
+    return render(request,'current_location.html')
